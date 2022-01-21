@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Built-By: oh_zed
+Build-Jdk: 17.0.1
+Implementation-Title: examen2-squelette
+Implementation-Version: 1.0
+Implementation-Vendor-Id: tn.esprit.spring
+Implementation-URL: https://spring.io/projects/spring-boot/examen2-squel
+ ette
+Created-By: Maven Integration for Eclipse
+
