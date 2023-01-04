@@ -1,0 +1,69 @@
+//interface to declare the search query as follows:
+public interface ProductRepository extends JpaRepository<Product, Long> {
+	
+	@Query("SELECT p FROM Product p WHERE p.name LIKE %?1%"
+			+ " OR p.brand LIKE %?1%"
+			+ " OR p.madein LIKE %?1%"
+			+ " OR CONCAT(p.price, '') LIKE %?1%")
+	public List<Product> search(String keyword);
+}
+
+//Note that for number field, we must concatenate it with an empty string so its value can be compared using the LIKE operator:
+CONCAT(p.price, '')
+
+//You can simplify the search query by concatenating all the related fields like this:
+@Query("SELECT p FROM Product p WHERE CONCAT(p.name, p.brand, p.madein, p.price) LIKE %?1%")
+public List<Product> search(String keyword);
+
+//More accurately, we should concatenate each field with a whitespace to avoid undesired results from the string concatenation. So the final search query would be:
+@Query("SELECT p FROM Product p WHERE CONCAT(p.name, ' ', p.brand, ' ', p.madein, ' ', p.price) LIKE %?1%")
+
+// class to take a keyword as parameter like this:
+@Service
+public class ProductService {
+	@Autowired
+	private ProductRepository repo;
+	
+	public List<Product> listAll(String keyword) {
+		if (keyword != null) {
+			return repo.search(keyword);
+		}
+		return repo.findAll();
+	}
+	
+	...
+}
+
+//And update the handler method in the controller class to read keyword from parameter in the URL:
+@Controller
+public class AppController {
+	@Autowired
+	private ProductService service;
+	
+	@RequestMapping("/")
+	public String viewHomePage(Model model, @Param("keyword") String keyword) {
+		List<Product> listProducts = service.listAll(keyword);
+		model.addAttribute("listProducts", listProducts);
+		model.addAttribute("keyword", keyword);
+		
+		return "index";
+	}
+	
+	...
+}
+
+// file:
+<form th:action="@{/}">
+	Filter: <input type="text" name="keyword" id="keyword" size="50" th:value="${keyword}" required />
+	&nbsp;
+	<input type="submit" value="Search" />
+	&nbsp;
+	<input type="button" value="Clear" id="btnClear" onclick="clearSearch()" />
+</form>
+
+//As you can see, we use Thymeleaf to render the values of the form action and the keyword. The Clear button allows the users to reset the search form. Also write the following Javascript code:
+<script type="text/javascript">
+	function clearSearch() {
+		window.location = "[[@{/}]]";
+	}
+</script>
